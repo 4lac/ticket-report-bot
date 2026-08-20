@@ -271,7 +271,7 @@ function extractPullAdminIds(content) {
 
 async function collectPullStats(channel) {
   const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const weekAgo = now - 30 * 24 * 60 * 60 * 1000;
 
   const counts = {}; // userId -> count
   let before;
@@ -393,7 +393,7 @@ function parseVoiceEvent(embed) {
 
 async function collectVoiceStats(channel) {
   const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const weekAgo = now - 30 * 24 * 60 * 60 * 1000;
 
   const events = [];
   let before;
