@@ -19,6 +19,12 @@ All reports live under one command: `/تقرير <type>`, each with a **weekly**
 | `/تقرير شامل` | Everything above in one report, **rendered as an image** | All logs |
 | `/تقييم` | Adds a handling note and a 1–5 rating to a row in the ticket report | — |
 
+### Example — full report image
+
+<p align="center"><img src="docs/report-example.png" alt="Example of the full report image" width="85%"/></p>
+
+<p align="center"><i>Sample data. The name, color, and logo come from your server's settings.</i></p>
+
 ## Automation
 
 - **Weekly auto report** — the full image report is posted every Friday at a set hour (Riyadh time).
