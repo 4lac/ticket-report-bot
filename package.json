@@ -1,0 +1,17 @@
+{
+  "name": "ticket-report-bot",
+  "version": "1.0.0",
+  "description": "بوت يقرأ سجل تذاكر Wick ويطلع تقرير أسبوعي لنشاط فريق الدعم",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "deploy-commands": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.1.0",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "moment-hijri": "^2.1.2"
+  }
+}
