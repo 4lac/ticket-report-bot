@@ -1,6 +1,6 @@
 // يسجل الأوامر (Slash Commands) مرة وحدة عند أول تشغيل، أو كل ما تعدل الأوامر
 require('dotenv').config();
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { REST, Routes, SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 // خيار "الفترة" المشترك بين كل تقارير الفرعية
 function addPeriodOption(sub, defaultLabel) {
@@ -83,7 +83,10 @@ const commands = [
         .setDescription('تعديل عدد التذاكر يدوياً (اختياري، لو العدد التلقائي غير دقيق)')
         .setRequired(false)
         .setMinValue(0)),
-].map((c) => c.toJSON());
+]
+  // كل الأوامر للإدارة بس (صلاحية Manage Server). صاحب السيرفر يقدر يعطيها رتب ثانية
+  // من: Server Settings > Integrations > اسم البوت
+  .map((c) => c.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
