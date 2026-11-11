@@ -17,7 +17,8 @@ All reports live under one command: `/تقرير <type>`, each with a **weekly**
 | `/تقرير سحب-يدوي` | Manual pulls logged by each staff member | Manual pull log |
 | `/تقرير حضور` | Time spent in support voice rooms + automatic pulls | Voice activity log |
 | `/تقرير شامل` | Everything above in one report, **rendered as an image** | All logs |
-| `/تقييم` | Adds a handling note and a 1–5 rating to a row in the ticket report | — |
+| `/تقييم` | Adds a handling note and a 1–5 rating to a row in the ticket report, and can correct a ticket count by hand | — |
+| `/تشخيص-تذاكر` | Diagnostic: prints the raw format of recent Ticket Tool log messages to the console | Ticket Tool log |
 
 ### Example — full report image
 
@@ -30,15 +31,17 @@ All reports live under one command: `/تقرير <type>`, each with a **weekly**
 - **Weekly auto report** — the full image report is posted every Friday at a set hour (Riyadh time).
 - **Image reports** — the full report is drawn as a styled image (rankings, icons, Arabic and English text) using `@napi-rs/canvas`.
 - **Role filter** — only members with a support role are counted.
+- **Accurate pull counting** — an automatic pull only counts when a staff member moves someone from the waiting room into a support room.
+- **Noise filter** — ignore specific users or bots that flood the voice log (`IGNORED_USER_IDS`).
 - **Mixed date formats** — parses Discord timestamps, Gregorian dates, and Hijri dates in Arabic (e.g. `15 صفر 1448 11:15 م`).
 - **Stylized names** — normalizes decorated Unicode room names (like `𝐒𝐮𝐩𝐩𝐨𝐫𝐭`) before matching.
-- **Long scans** — large monthly reports reply immediately and post the result when ready, avoiding Discord's interaction timeout.
+- **Long scans** — large monthly reports reply immediately and post the result when ready, avoiding Discord's interaction timeout. If the voice log is too large to read fully, the report is marked as partial.
 
 ## Live support tools (optional)
 
 - **Waiting-room alerts** — when a member joins the waiting room, staff get an alert with a dropdown (Support 1–10) to pull them in one click. The bot records who pulled them, lets staff log the reason and resolution in the same message, and flags members who left before being helped.
-- **Auto-return** — members left in a support room without staff are moved back to the waiting room after a set time.
-- **On-duty game check** — staff playing a non-allowed game while in a support room are moved to a break room, with an alert to the team.
+- **Auto-return** — members left in a support room without staff are moved back to the waiting room after a set time. The alert shows which staff member pulled them in.
+- **On-duty game check** — staff playing a non-allowed game while in a support room are moved to the least crowded break room (or disconnected if no break rooms are set), with an alert to the team.
 
 ---
 
