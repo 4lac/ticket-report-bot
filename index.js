@@ -749,7 +749,7 @@ async function buildFullMergedReportImage(guild, days) {
     generatedAtText: `Generated: ${riyadhNow} (Riyadh)`,
   });
 
-  return new AttachmentBuilder(buffer, { name: 'north-life-report.png' });
+  return new AttachmentBuilder(buffer, { name: 'support-report.png' });
 }
 
 // ---------- ميزة 1: إرجاع تلقائي للويتنق لو المسحوب لحاله بدون إداري ----------
