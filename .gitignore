@@ -1,0 +1,9 @@
+# secrets
+.env
+
+# dependencies
+node_modules/
+
+# runtime data
+last-report.json
+*.log
