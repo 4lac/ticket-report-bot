@@ -2,7 +2,29 @@ const path = require('path');
 const { createCanvas, GlobalFonts, loadImage } = require('@napi-rs/canvas');
 
 const FONTS_DIR = path.join(__dirname, 'assets', 'fonts');
-const LOGO_PATH = path.join(__dirname, 'assets', 'logo', 'northlife-mark.png');
+// ---------- هوية السيرفر (من .env) ----------
+const BRAND_NAME = (process.env.BRAND_NAME || 'Support Reports').trim();
+const BRAND_COLOR = /^#?[0-9a-fA-F]{6}$/.test(process.env.BRAND_COLOR || '')
+  ? '#' + process.env.BRAND_COLOR.replace('#', '')
+  : '#e2203a';
+// مسار الشعار نسبةً لمجلد البوت (مثال: assets/logo/my-logo.png). لو فاضي، يرسم شعار تذكرة افتراضي
+const LOGO_PATH = process.env.BRAND_LOGO ? path.resolve(__dirname, process.env.BRAND_LOGO) : null;
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgba(hex, a) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+// يفتح أو يغمّق اللون (amount موجب = أفتح، سالب = أغمق)
+function shade(hex, amount) {
+  const target = amount >= 0 ? 255 : 0;
+  const t = Math.abs(amount);
+  const [r, g, b] = hexToRgb(hex).map((c) => Math.round(c + (target - c) * t));
+  return '#' + [r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('');
+}
 let fontsRegistered = false;
 let logoImagePromise = null;
 function ensureFonts() {
@@ -14,20 +36,26 @@ function ensureFonts() {
   fontsRegistered = true;
 }
 function getLogoImage() {
-  if (!logoImagePromise) logoImagePromise = loadImage(LOGO_PATH);
+  if (!LOGO_PATH) return Promise.resolve(null);
+  if (!logoImagePromise) {
+    logoImagePromise = loadImage(LOGO_PATH).catch((err) => {
+      console.error('[BRAND] تعذر تحميل الشعار، بنستخدم الشعار الافتراضي:', err.message);
+      return null;
+    });
+  }
   return logoImagePromise;
 }
 
-// ---------- ألوان ثيم NorthLife ----------
+// ---------- ألوان الثيم (اللون الأساسي يجي من BRAND_COLOR) ----------
 const COLORS = {
   bgTop: '#0a0a0d',
   bgBottom: '#000000',
   card: '#141418',
   cardAlt: '#17171c',
   border: 'rgba(255,255,255,0.06)',
-  red: '#e2203a',
-  redDark: '#7a0f1e',
-  redLight: '#ff5a6e',
+  red: BRAND_COLOR,
+  redDark: shade(BRAND_COLOR, -0.45),
+  redLight: shade(BRAND_COLOR, 0.3),
   white: '#ffffff',
   gray: '#9a9aa3',
   grayDark: '#5c5c66',
@@ -126,42 +154,17 @@ function drawIconPencil(ctx, cx, cy, size, color) {
   ctx.restore();
 }
 
-// -------- شعار NorthLife (علامة N زاوية حمراء متدرجة) --------
-function drawBrandMark(ctx, x, y, size) {
-  const w = size, h = size;
-  const grad = ctx.createLinearGradient(x, y, x, y + h);
+// -------- الشعار الافتراضي (تذكرة داخل مربع بلون السيرفر) - يطلع لو ما فيه BRAND_LOGO --------
+function drawDefaultMark(ctx, x, y, size) {
+  const grad = ctx.createLinearGradient(x, y, x, y + size);
   grad.addColorStop(0, COLORS.redLight);
   grad.addColorStop(1, COLORS.redDark);
-
-  const t = w * 0.26; // سمك الخط
   ctx.save();
-  ctx.translate(x, y);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(t, 0);
-  ctx.lineTo(t, h * 0.56);
-  ctx.lineTo(w - t, 0);
-  ctx.lineTo(w, 0);
-  ctx.lineTo(w, h);
-  ctx.lineTo(w - t, h);
-  ctx.lineTo(w - t, h * 0.44);
-  ctx.lineTo(t, h);
-  ctx.lineTo(0, h);
-  ctx.closePath();
+  roundRect(ctx, x, y, size, size, size * 0.24);
   ctx.fillStyle = grad;
   ctx.fill();
-
-  // خط لمعة خفيف
-  ctx.globalAlpha = 0.25;
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.moveTo(t * 1.15, h * 0.08);
-  ctx.lineTo(t * 1.65, h * 0.08);
-  ctx.lineTo(t * 1.65, h * 0.42);
-  ctx.lineTo(t * 1.15, h * 0.42);
-  ctx.closePath();
-  ctx.fill();
   ctx.restore();
+  drawIconTicket(ctx, x + size / 2, y + size / 2, size * 0.58, COLORS.white);
 }
 
 function drawDiagonalTicks(ctx, x, y, count, gap, len, color) {
@@ -228,32 +231,31 @@ async function renderFullReportImage({ rows, title, periodLabel, partial, genera
 
   // توهج أحمر أعلى يمين
   const glow = ctx.createRadialGradient(W - 40, 40, 20, W - 40, 40, 480);
-  glow.addColorStop(0, 'rgba(226,32,58,0.35)');
-  glow.addColorStop(1, 'rgba(226,32,58,0)');
+  glow.addColorStop(0, rgba(COLORS.red, 0.35));
+  glow.addColorStop(1, rgba(COLORS.red, 0));
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, HEADER_H + 150);
 
   // توهج خفيف أسفل يسار
   const glow2 = ctx.createRadialGradient(60, H - 60, 10, 60, H - 60, 320);
-  glow2.addColorStop(0, 'rgba(226,32,58,0.12)');
-  glow2.addColorStop(1, 'rgba(226,32,58,0)');
+  glow2.addColorStop(0, rgba(COLORS.red, 0.12));
+  glow2.addColorStop(1, rgba(COLORS.red, 0));
   ctx.fillStyle = glow2;
   ctx.fillRect(0, H - 400, 420, 400);
 
   // ---------- الهيدر ----------
-  drawDiagonalTicks(ctx, PAD, PAD + 4, 5, 16, 26, 'rgba(226,32,58,0.55)');
+  drawDiagonalTicks(ctx, PAD, PAD + 4, 5, 16, 26, rgba(COLORS.red, 0.55));
   const logoSize = 76;
-  ctx.drawImage(logoImage, PAD, PAD + 34, logoSize, logoSize);
+  if (logoImage) ctx.drawImage(logoImage, PAD, PAD + 34, logoSize, logoSize);
+  else drawDefaultMark(ctx, PAD, PAD + 34, logoSize);
 
+  // اسم السيرفر (يدعم العربي والإنجليزي)
+  const brandIsArabic = /[\u0600-\u06FF]/.test(BRAND_NAME);
   ctx.textAlign = 'left';
-  ctx.direction = 'ltr';
-  ctx.font = '600 30px PoppinsBold';
+  ctx.direction = brandIsArabic ? 'rtl' : 'ltr';
+  ctx.font = brandIsArabic ? '700 30px NKufi' : '600 30px PoppinsBold';
   ctx.fillStyle = COLORS.white;
-  ctx.fillText('North', PAD + 90, PAD + 72);
-  const northW = ctx.measureText('North').width;
-  ctx.font = '600 30px Poppins';
-  ctx.fillStyle = COLORS.red;
-  ctx.fillText('Life', PAD + 90 + northW + 2, PAD + 72);
+  ctx.fillText(truncateText(ctx, BRAND_NAME, 520), PAD + 90, PAD + 82);
 
   // العنوان الرئيسي (عربي RTL)
   ctx.direction = 'rtl';
@@ -274,9 +276,9 @@ async function renderFullReportImage({ rows, title, periodLabel, partial, genera
 
   // خط فاصل متدرج
   const lineGrad = ctx.createLinearGradient(PAD, 0, W - PAD, 0);
-  lineGrad.addColorStop(0, 'rgba(226,32,58,0)');
+  lineGrad.addColorStop(0, rgba(COLORS.red, 0));
   lineGrad.addColorStop(0.5, COLORS.red);
-  lineGrad.addColorStop(1, 'rgba(226,32,58,0)');
+  lineGrad.addColorStop(1, rgba(COLORS.red, 0));
   ctx.fillStyle = lineGrad;
   ctx.fillRect(PAD, HEADER_H, W - PAD * 2, 3);
 
@@ -371,7 +373,7 @@ async function renderFullReportImage({ rows, title, periodLabel, partial, genera
   ctx.textAlign = 'right';
   ctx.font = '600 20px NKufi';
   ctx.fillStyle = COLORS.gray;
-  ctx.fillText('NorthLife • نظام التقارير', W - PAD, footerY + 48);
+  ctx.fillText(`${BRAND_NAME} • نظام التقارير`, W - PAD, footerY + 48);
 
   ctx.direction = 'ltr';
   ctx.textAlign = 'left';
