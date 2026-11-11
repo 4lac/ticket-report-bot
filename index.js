@@ -731,7 +731,7 @@ async function buildFullMergedReportData(guild, days) {
   return { label, days, partial, rows };
 }
 
-// يبني صورة التقرير الشامل (ثيم NorthLife) - يستخدمها الأمر والجدولة التلقائية
+// يبني صورة التقرير الشامل (بهوية السيرفر من .env) - يستخدمها الأمر والجدولة التلقائية
 async function buildFullMergedReportImage(guild, days) {
   const { label, partial, rows } = await buildFullMergedReportData(guild, days);
 
